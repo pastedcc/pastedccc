@@ -1,0 +1,186 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archive - PASTE.DC</title>
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --text-color: #333;
+            --primary-color: #4285f4;
+            --border-color: #ddd;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            margin: 0;
+        }
+        
+        .paste-list {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .paste-item {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+        
+        .paste-item:hover {
+            transform: translateY(-2px);
+        }
+        
+        .paste-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .paste-id {
+            font-weight: bold;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 1.1rem;
+        }
+        
+        .paste-meta {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .paste-preview {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            overflow: hidden;
+            white-space: pre-wrap;
+            max-height: 100px;
+            font-size: 0.9rem;
+            border-left: 3px solid var(--primary-color);
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        
+        .pagination a, .pagination span {
+            padding: 8px 16px;
+            text-decoration: none;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-color);
+        }
+        
+        .pagination a:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .pagination .current {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .no-pastes {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><a href="{{ url_for('index') }}" style="text-decoration: none; color: var(--primary-color);">PASTE.DC</a> - Archive</h1>
+            <nav>
+                <a href="{{ url_for('index') }}" style="color: var(--primary-color); text-decoration: none;">← Create Paste</a>
+            </nav>
+        </header>
+        
+        {% if pastes.items %}
+            <div class="paste-list">
+                {% for paste in pastes.items %}
+                    <div class="paste-item">
+                        <div class="paste-header">
+                            <a href="{{ url_for('view_paste', paste_id=paste.id) }}" class="paste-id">{{ paste.id }}</a>
+                            <div class="paste-meta">
+                                <strong>{{ paste.language }}</strong> | 
+                                {{ paste.views }} views | 
+                                {{ paste.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                {% if paste.expires_at %}
+                                    | Expires: {{ paste.expires_at.strftime('%Y-%m-%d %H:%M') }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="paste-preview">{{ paste.content[:200] }}{% if paste.content|length > 200 %}...{% endif %}</div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            {% if pastes.pages > 1 %}
+                <div class="pagination">
+                    {% if pastes.has_prev %}
+                        <a href="{{ url_for('archive', page=pastes.prev_num) }}">← Previous</a>
+                    {% endif %}
+                    
+                    {% for page_num in pastes.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != pastes.page %}
+                                <a href="{{ url_for('archive', page=page_num) }}">{{ page_num }}</a>
+                            {% else %}
+                                <span class="current">{{ page_num }}</span>
+                            {% endif %}
+                        {% else %}
+                            <span>...</span>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if pastes.has_next %}
+                        <a href="{{ url_for('archive', page=pastes.next_num) }}">Next →</a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="no-pastes">
+                <h2>No public pastes found</h2>
+                <p>Be the first to create a public paste!</p>
+                <a href="{{ url_for('index') }}" style="color: var(--primary-color);">Create a paste</a>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
